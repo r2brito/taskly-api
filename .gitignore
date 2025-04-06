@@ -25,3 +25,6 @@ Thumbs.db
 # Editor settings
 .vscode/
 .idea/
+
+
+databases/pgdata
