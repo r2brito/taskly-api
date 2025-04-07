@@ -5,12 +5,12 @@ services:
     container_name: databases
     restart: always
     ports:
-      - 5432:5432
+      - 5433:5432
     environment:
       - POSTGRES_USER=postgres
       - POSTGRES_PASSWORD=postgres
     volumes:
-      - ./databases/pgdata:/var/lib/postgresql/data
+      - ./databases/pgdata:/data/postgres
       - ./databases/init:/docker-entrypoint-initdb.d
 
   taskly-api:
