@@ -35,7 +35,7 @@ export class Tasks1743649822636 implements MigrationInterface {
           {
             name: "dueDate",
             type: "date",
-            isNullable: false
+            isNullable: true
           },
           {
             name: "created_at",

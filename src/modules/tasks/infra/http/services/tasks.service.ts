@@ -1,8 +1,10 @@
 import { inject, injectable } from "tsyringe";
-import ITaskDTO from "@modules/tasks/dtos/tasks.dto";
-import ITaskRepository from "@modules/tasks/repositories/ITask.repository";
 import Tasks from "../../typeorm/entities/Tasks";
+import ITaskRepository from "@modules/tasks/repositories/ITask.repository";
 import { PriorityEnum } from "../../typeorm/entities/enum/priority.enum";
+
+import { ITask } from "@modules/tasks/dtos/tasks.dto";
+import DTOs = ITask.DTO;
 
 @injectable()
 class TasksService {
@@ -20,7 +22,7 @@ class TasksService {
     priority,
     completed,
     dueDate
-  }: ITaskDTO): Promise<Tasks> {
+  }: DTOs.ITaskDTO): Promise<Tasks> {
     const taskExists = await this.taskRepository.findByTitle(title);
 
     if (taskExists) {
@@ -38,10 +40,34 @@ class TasksService {
     return task;
   }
 
-  public async index(): Promise<Tasks[]> {
-    const tasks = await this.taskRepository.findAll();
+  public async list({ page = 1, perPage = 10, search }: DTOs.List): Promise<{
+    data: Tasks[];
+    meta: {
+      currentPage: number;
+      perPage: number;
+      totalItems: number;
+      totalPages: number;
+      hasNextPage: boolean;
+    };
+  }> {
+    const [tasks, total] = await this.taskRepository.findAll(
+      page,
+      perPage,
+      search
+    );
 
-    return tasks;
+    const totalPages = Math.ceil(total / perPage);
+
+    return {
+      data: tasks,
+      meta: {
+        currentPage: page,
+        perPage,
+        totalItems: total,
+        totalPages,
+        hasNextPage: page < totalPages
+      }
+    };
   }
 
   public async show(id: string): Promise<Tasks | undefined> {
@@ -58,9 +84,9 @@ class TasksService {
     id: string,
     title: string,
     description: string,
+    dueDate: Date,
     priority: PriorityEnum,
-    completed: boolean,
-    dueDate: Date
+    completed: boolean
   ): Promise<Tasks> {
     const task = await this.taskRepository.findById(id);
 

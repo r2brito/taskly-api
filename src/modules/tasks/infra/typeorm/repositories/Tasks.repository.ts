@@ -4,7 +4,9 @@ import { AppDataSource } from "@shared/infra/typeorm/database/data-source";
 import Tasks from "@modules/tasks/infra/typeorm/entities/Tasks";
 
 import ITasksRepository from "@modules/tasks/repositories/ITask.repository";
-import ITaskDTO from "@modules/tasks/dtos/tasks.dto";
+import { ITask } from "@modules/tasks/dtos/tasks.dto";
+
+import DTOs = ITask.DTO;
 
 class TasksRepository implements ITasksRepository {
   private ormRepository: Repository<Tasks>;
@@ -19,7 +21,7 @@ class TasksRepository implements ITasksRepository {
     priority,
     completed,
     dueDate
-  }: ITaskDTO): Promise<Tasks> {
+  }: DTOs.ITaskDTO): Promise<Tasks> {
     const user = this.ormRepository.create({
       title,
       description,
@@ -49,12 +51,23 @@ class TasksRepository implements ITasksRepository {
     return task;
   }
 
-  public async findAll(): Promise<Tasks[]> {
-    let tasks: Tasks[];
+  public async findAll(
+    page: number,
+    perPage: number,
+    search?: string
+  ): Promise<[Tasks[], number]> {
+    const queryBuilder = this.ormRepository.createQueryBuilder("task");
 
-    tasks = await this.ormRepository.find();
+    if (search) {
+      queryBuilder.where("task.title ILIKE :search", { search: `%${search}%` });
+    }
 
-    return tasks;
+    const [tasks, total] = await queryBuilder
+      .skip((page - 1) * perPage)
+      .take(perPage)
+      .getManyAndCount();
+
+    return [tasks, total];
   }
 
   public async delete(id: string): Promise<void> {

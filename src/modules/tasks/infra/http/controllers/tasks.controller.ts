@@ -7,8 +7,6 @@ class TasksController {
   public async create(req: Request, res: Response): Promise<Response> {
     const { title, description, priority, completed, dueDate } = req.body;
 
-    console.log("req.body", req.body);
-
     const createUser = container.resolve(TasksService);
 
     const task = await createUser.execute({
@@ -23,9 +21,11 @@ class TasksController {
   }
 
   public async index(req: Request, res: Response): Promise<Response> {
+    const { page, per_page, search } = req.params;
+
     const listAllUsers = container.resolve(TasksService);
 
-    const users = await listAllUsers.index();
+    const users = await listAllUsers.list({ page, per_page, search });
 
     return res.status(200).json(users);
   }
@@ -43,13 +43,13 @@ class TasksController {
   public async update(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
 
-    const { name, description, priority, completed, dueDate } = req.body;
+    const { title, description, priority, completed, dueDate } = req.body;
 
     const updateTask = container.resolve(TasksService);
 
     const task = await updateTask.update(
       id,
-      name,
+      title,
       description,
       dueDate,
       priority,
@@ -62,11 +62,11 @@ class TasksController {
   public async delete(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
 
-    const showUser = container.resolve(TasksService);
+    const deletedTask = container.resolve(TasksService);
 
-    const user = await showUser.show(id);
+    const user = await deletedTask.delete(id);
 
-    return res.status(200).json(user);
+    return res.json({ message: "Post deleted successfully." });
   }
 }
 
